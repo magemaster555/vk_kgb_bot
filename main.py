@@ -26,6 +26,9 @@ cars[0] = None
 warcars = {}
 warcars[0] = None
 
+bosses = {}
+bosses[0] = None
+
 plugins = []
 
 LOG = ""
@@ -62,6 +65,12 @@ for row in dbr:
     warcars[row[1]] = WarCar(row[0], row[1], row[2], row[4], row[3], row[5])
 LOG += log("Автомобили проинициализированы.")
 
+dbr = db.exec("SELECT * FROM bosses")
+dbr = dbr.fetchall()
+for row in dbr:
+    bosses[row[0]] = [row[0], row[1], row[2], row[3]]
+LOG += log("Боссы проинициализированы.")
+
 LOG += log("Начинается инициализация плагинов.")
 for file in os.listdir('plugins'):
     if os.path.isfile('plugins/'+file) and '.py' in file and file not in ['utils.py', 'db.py']:
@@ -73,6 +82,8 @@ for file in os.listdir('plugins'):
             else: LOG += log("Ошибка загрузки плагина "+file.replace('.py','')+" - отсутствует атрибут lvl")
         else: LOG += log("Ошибка загрузки плагина "+file.replace('.py','')+" - отсутствует атрибут triggers")
 LOG += log("Загружены все плагины.")
+
+activeboss = Boss()
 
 LP = LongPoll()
 LOG += log("Проинициальзорован LongPoll")
@@ -104,7 +115,7 @@ while True:
 
                     attach_user = 0
                     if len(cmd_params) > 1:
-                        found_id = re.findall(r"\[id(\d+)\|[@,*].+\]", cmd_params[1])
+                        found_id = re.findall(r"\[id(\d+)\|.+\]", cmd_params[1])
                         if len(found_id) == 1:
                             attach_user = int(found_id[0])
                             if attach_user not in users:
@@ -131,7 +142,10 @@ while True:
                                         cmd.users = users
                                     if hasattr(plugin.main, 'need_plugins') and plugin.main.need_plugins:
                                         cmd.add = plugins
-
+                                    if hasattr(plugin.main, 'need_bosses') and plugin.main.need_bosses:
+                                        cmd.ab = activeboss
+                                        cmd.add = bosses
+                                        
                                     activemod = plugin.main()
                                     threading.Thread(target=activemod.execute,args=(cmd,)).start()
                             else:

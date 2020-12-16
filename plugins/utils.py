@@ -48,6 +48,15 @@ class State:
         if key != "":
             return json.loads(open("data/states.json", "r").read())[key]
         else: return None
+
+    def set(self, key, val):
+        if key != "":
+            js = json.loads(open("data/states.json", "r").read())
+            js[key] = val
+            open("data/states.json", "w").write(json.dumps(js))
+            return js[key]
+        else: return None
+
     def switch(self, key):
         if key != "":
             js = json.loads(open("data/states.json", "r").read())
@@ -77,6 +86,7 @@ class LongPoll:
             if 'failed' in r:
                 print(r)
                 self.__init__()
+                return []
             elif 'updates' in r:
                 if self.ts != r['ts']:
                     log("Обновлен TS. Новый - "+str(r['ts']))
@@ -162,7 +172,7 @@ class WarCar:
         self.hp = hp
         self.exp_to_reach = exp_to_reach
 
-#returns array [nextCar: Car, expToIt : int]
+#returns array [nextCar : Car, expToIt : int]
 def getNextCarAndExp(carid, cars):
     normalid = 0
     exp = 0
@@ -216,6 +226,21 @@ class User:
 def byRank_key(user):
     return user.rank
 
+class Boss:
+    id : int
+    name : str
+    hp : int
+    get_dmg : int
+    def __init__(self, id = 0, name = "", hp = 0, get_dmg = 0):
+        self.name = name
+        self.hp = hp
+        self.get_dmg = get_dmg
+        self.id = id
+    def doDamage(self):
+        self.hp -= self.get_dmg
+        if self.hp <= 0:
+            return True
+        return False
 
 class Command:
     by : User
@@ -227,6 +252,7 @@ class Command:
     cars : dict
     warcars : dict
     users : dict
+    ab : Boss
     add : dict
     def __init__(self, user, cmd, params, peer, attach = None, divs = None, cars = None, warcars = None, users = None, add = None):
         self.by = user

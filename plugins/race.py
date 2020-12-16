@@ -7,9 +7,13 @@ class main:
     need_cars = True
     need_attach = True
     need_users = True
+    need_bosses = True
     cars = {}
+    activeboss = None
     def execute(self, cmd):
         self.cars = cmd.cars
+        if state.get("boss"):
+            self.activeboss = cmd.ab
         isid = "id" in cmd.cmd
         if isid and cmd.by.admin_level != 2:
             vk_say(NO_ACCESS_TO_COMMAND, cmd.peer)
@@ -43,6 +47,16 @@ class main:
                 win = st
             else:
                 win = nd
-            return "В этом заеде победил "+win.name.nom()+" на своей "+self.cars[win.car_id].name+"!", [st, nd, win]
+            toreturn = "В этом заеде победил "+win.name.nom()+" на своей "+self.cars[win.car_id].name+"!"
+            if state.get("boss"):
+                killed = self.activeboss.doDamage()
+                if not killed:
+                    toreturn += f"\n\nЭтот заезд нанес {self.activeboss.get_dmg} урона боссу {self.activeboss.name}. У него осталось {self.activeboss.hp} ХП."
+                else:
+                    toreturn += f"\n\nЭтот заезд нанес последний удар по боссу, уничтожив его.\n[так тут надо упоминние не забыть]"
+                    self.activeboss.id = 0
+                    state.switch("boss")
+                    state.switch("race")
+            return toreturn, [st, nd, win]
         else:
             return "Ошибка: Вы не можете устраивать заезд с самим с собой", None
